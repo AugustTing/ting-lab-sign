@@ -76,7 +76,7 @@
             type: 'text',
             text: `GPS_SIGNIN:${lat},${lng}`
           }]).then(() => {
-            liff.closeWindow(); // 成功後關閉視窗
+            // liff.closeWindow(); // 成功後關閉視窗
           }).catch(err => {
             status.innerText = "訊息傳送失敗：" + err;
           });
@@ -92,4 +92,5 @@
     }
   </script>
 </body>
+
 </html>
