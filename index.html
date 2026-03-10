@@ -76,21 +76,16 @@
             type: 'text',
             text: `GPS_SIGNIN:${lat},${lng}`
           }]).then(() => {
-            // liff.closeWindow(); // 成功後關閉視窗
+            status.innerText = "🎉 簽到訊息已發送！\n兩秒後關閉視窗...";
+            setTimeout(() => liff.closeWindow(), 2000);
           }).catch(err => {
-            status.innerText = "訊息傳送失敗：" + err;
+            // ⚠️ 如果這裡報錯 FORBIDDEN，代表 GitHub 網域依然沒拿到權限
+            status.innerText = "❌ 傳送失敗：" + err.message;
+            document.getElementById('checkBtn').style.display = 'block';
           });
-        },
-        (error) => {
-          btn.style.display = 'block';
-          loader.style.display = 'none';
-          status.innerText = "❌ 定位失敗：請務必開啟手機 GPS 並允許瀏覽器存取。";
-          console.error(error);
-        },
-        { enableHighAccuracy: true, timeout: 10000 }
-      );
     }
   </script>
 </body>
 
 </html>
+
