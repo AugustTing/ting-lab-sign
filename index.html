@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TING Lab 副本登入</title>
+  <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
+  <script>var vConsole = new window.VConsole();</script>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    body { font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; text-align: center; padding: 40px 20px; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 100vh; }
+    .card { background: white; border-radius: 20px; padding: 30px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+    .btn { display: none;background-color: #28a745; color: white; padding: 18px 40px; border: none; border-radius: 50px; font-size: 20px; font-weight: bold; cursor: pointer; transition: 0.3s; width: 100%; margin-top: 20px; }
+    .btn:active { transform: scale(0.95); background-color: #218838; }
+    #status { margin-top: 20px; color: #555; font-size: 14px; }
+    .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 30px; height: 30px; animation: spin 2s linear infinite; display: none; margin: 20px auto; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>📍 TING Lab 安全驗證</h2>
+    <p>準備進入研究室副本...</p>
+    <div id="loader" class="loader"></div>
+    <button id="checkBtn" class="btn" onclick="startCheckIn()" style="display: none;">🚀 登入副本</button>
+    <p id="status">請確認 GPS 定位已開啟</p>
+  </div>
+
+  <script>
+    window.onload = function() {
+      // log("檢查環境中...");
+      // // 如果是在外部瀏覽器 (Safari/Chrome)，直接顯示按鈕 (因為 Safari 通常 init 很快)
+      // if (!liff.isInClient()) {
+      //   log("偵測為外部瀏覽器");
+      // }
+      try {
+        // 1. 初始化 LIFF
+        liff.init({ liffId: "2009388667-804HC7fm" }).then(() => {      
+          const status = document.getElementById('status');
+          // if (!liff.isLoggedIn()) {
+          //   liff.login();
+          // }
+          status.innerText = "LIFF初始化成功";
+          document.getElementById('checkBtn').style.display = 'block';
+        }).catch(err => {      
+          const status = document.getElementById('status');
+          status.innerText = `LIFF 初始化失敗，失敗原因:${err}`;
+          console.error("LIFF 初始化失敗", err);
+          if (liff.getIDToken()) {
+            document.getElementById('checkBtn').style.display = 'block';
+          }
+        });
+      }catch (err) {
+        log("💥 系統崩潰: " + err.message);
+      }
+    }
+    function startCheckIn() {
+      const btn = document.getElementById('checkBtn');
+      const loader = document.getElementById('loader');
+      const status = document.getElementById('status');
+      
+      btn.style.display = 'none';
+      loader.style.display = 'block';
+      status.innerText = "正在向衛星請求座標...";
+
+      // 2. 呼叫手機硬體 GPS
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          
+          status.innerText = "座標獲取成功，傳送中...";
+          
+          // 3. 發送訊息回 Bot
+          liff.sendMessages([{
+            type: 'text',
+            text: `GPS_SIGNIN:${lat},${lng}`
+          }]).then(() => {
+            liff.closeWindow(); // 成功後關閉視窗
+          }).catch(err => {
+            status.innerText = "訊息傳送失敗：" + err;
+          });
+        },
+        (error) => {
+          btn.style.display = 'block';
+          loader.style.display = 'none';
+          status.innerText = "❌ 定位失敗：請務必開啟手機 GPS 並允許瀏覽器存取。";
+          console.error(error);
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+  </script>
+</body>
+</html>
